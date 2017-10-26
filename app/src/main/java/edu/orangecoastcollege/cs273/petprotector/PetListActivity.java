@@ -1,15 +1,29 @@
 package edu.orangecoastcollege.cs273.petprotector;
 
+import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.net.Uri;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.widget.ImageView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class PetListActivity extends AppCompatActivity {
     private ImageView petImageView;
+
+    // Constants for permissions
+    private static final int GRANTED = PackageManager.PERMISSION_GRANTED;
+    private static final int DENIED = PackageManager.PERMISSION_DENIED;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,9 +36,49 @@ public class PetListActivity extends AppCompatActivity {
         petImageView.setImageURI(getUriFromResource(this, R.drawable.none));
     }
 
+    public void selectPetImage(View view) {
+        List<String> permsList = new ArrayList<>();
+
+        // Check each permission individually
+        int hasCameraPerm = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+        if (hasCameraPerm == DENIED) {
+            permsList.add(Manifest.permission.CAMERA);
+        }
+
+        int hasReadStoragePerm = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+        if (hasReadStoragePerm == DENIED) {
+            permsList.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+        }
+
+        int hasWriteStoragePerm = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (hasWriteStoragePerm == DENIED) {
+            permsList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+
+        // Some permission have not been granted
+        if (permsList.size() > 0) {
+            // Convert permsList into an array (to pass into ActivityCompat.requestPermissions())
+            String[] permsArray = new String[permsList.size()];
+            permsList.toArray(permsArray);
+
+            // Ask user for permission
+            ActivityCompat.requestPermissions(this, permsArray, 42); // make up an int ID
+        }
+
+        // Check for all the permissions, then start the Image Gallery
+        if (hasCameraPerm == GRANTED && hasReadStoragePerm == GRANTED && hasWriteStoragePerm == GRANTED) {
+            // Open the Image Gallery
+            Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            // Start activity for a result (picture)
+            startActivityForResult(galleryIntent, 1); // make up an int ID
+        }
+
+
+    }
+
     /**
      * Constructs the URI for a given asset
-     * @param context
+     * @param context Context of the asset
      * @param resId rId of the asset
      * @return Uri of the asset
      */
