@@ -18,13 +18,21 @@ import android.widget.ImageView;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * <code>PetListActivity</code> allows the user to add an image of a pet to a list of pets
+ */
 public class PetListActivity extends AppCompatActivity {
     private ImageView petImageView;
+    private Uri imageUri;
 
     // Constants for permissions
     private static final int GRANTED = PackageManager.PERMISSION_GRANTED;
     private static final int DENIED = PackageManager.PERMISSION_DENIED;
 
+    /**
+     * Creates an instance of <code>PetListActivity</code> in the view
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,6 +44,10 @@ public class PetListActivity extends AppCompatActivity {
         petImageView.setImageURI(getUriFromResource(this, R.drawable.none));
     }
 
+    /**
+     * Checks for permissions then starts an Intent to select an image
+     * @param view
+     */
     public void selectPetImage(View view) {
         List<String> permsList = new ArrayList<>();
 
@@ -55,7 +67,7 @@ public class PetListActivity extends AppCompatActivity {
             permsList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
 
-        // Some permission have not been granted
+        // If some permission have not been granted
         if (permsList.size() > 0) {
             // Convert permsList into an array (to pass into ActivityCompat.requestPermissions())
             String[] permsArray = new String[permsList.size()];
@@ -72,8 +84,22 @@ public class PetListActivity extends AppCompatActivity {
             // Start activity for a result (picture)
             startActivityForResult(galleryIntent, 1); // make up an int ID
         }
+    }
 
-
+    /**
+     * Displays a selected image in the view
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1 && resultCode == RESULT_OK && data != null) {
+            // data = data from galleryIntent (the URI of some image)
+            imageUri = data.getData();
+            petImageView.setImageURI(imageUri);
+        }
     }
 
     /**
